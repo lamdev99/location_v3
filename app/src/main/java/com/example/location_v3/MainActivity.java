@@ -152,8 +152,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         long timeNowInSecond = new Date().getTime();
 
         runOnUiThread(() -> {
-            double strLatitude = 0;
-            double strLongitude = 0;
+            double strLatitude;
+            double strLongitude;
             String CurrentDateTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
             strLatitude = location.getLatitude();
             strLongitude = location.getLongitude();
