@@ -29,6 +29,7 @@ import android.widget.Toast;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -46,8 +47,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     boolean Start_status = false;
     List<String[]> Result = new ArrayList<>();
     CircularProgressBar circularProgressBar;
-//    List<Location> GPXresult = new ArrayList<>();
+    //    List<Location> GPXresult = new ArrayList<>();
     private final String TAG = "AppLog";
+    private long originalTime = new Date().getTime();
 
 
     @Override
@@ -127,7 +129,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         super.onResume();
         Thread thread = new Thread(() -> {
             while (true) {
-                Log.d(TAG+"130", String.valueOf(myLocation == null));
                 if ((myLocation != null) && (Start_status)) {
                     updateSpeed(myLocation);
                 }
@@ -155,27 +156,26 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     private void updateSpeed(Clocation location) {
-        Log.d(TAG+"157",location.toString());
-        if (location != null) {
-            runOnUiThread(() -> {
-                double strLatitude = 0;
-                double strLongitude = 0;
-                String CurrentDateTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-                strLatitude = location.getLatitude();
-                strLongitude = location.getLongitude();
-                float strCurrentSpeed = (float) (location.getSpeed() * 3.6);
-                circularProgressBar.setProgress(strCurrentSpeed);
+        Log.d(TAG + "157", location.toString());
+        long timeNowInSecond = new Date().getTime();
+
+        runOnUiThread(() -> {
+            double strLatitude = 0;
+            double strLongitude = 0;
+            String CurrentDateTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+            strLatitude = location.getLatitude();
+            strLongitude = location.getLongitude();
+            float strCurrentSpeed = (float) (location.getSpeed() * 3.6);
+            circularProgressBar.setProgress(strCurrentSpeed);
+            Log.d(TAG+"170",timeNowInSecond + " - "+originalTime);
+            if (timeNowInSecond >= originalTime + 1000) {
+                originalTime = timeNowInSecond;
                 Result.add(new String[]{CurrentDateTime, strCurrentSpeed + "", strLatitude + "", strLongitude + ""});
-                tv_speed.setText(String.valueOf(strCurrentSpeed));
-                tv_time.setText((CharSequence) CurrentDateTime);
-                Log.d("Main156", String.valueOf(Result));
-
-            });
-        } else {
-            // TODO when location is null
-        }
+            }
+            tv_speed.setText(String.valueOf(strCurrentSpeed));
+            tv_time.setText((CharSequence) CurrentDateTime);
+        });
     }
-
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void toSaveCSV() throws IOException {
@@ -185,10 +185,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         CSVWriter writer = new CSVWriter(new FileWriter(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName, false));
         int d = Log.d("main183", getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).toString());
         Toast.makeText(MainActivity.this, "save!", Toast.LENGTH_LONG).show();
-        Log.d("Main159", Result.toString());
         writer.writeAll(Result);
         writer.close();
-
     }
 
     private static final String[] permissions = new String[]{"android.permission.ACCESS_FINE_LOCATION", "android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.ACCESS_COARSE_LOCATION", "android.permission.MANAGE_EXTERNAL_STORAGE", "android.permission.READ_EXTERNAL_STORAGE"};
