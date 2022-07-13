@@ -20,21 +20,18 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.*;
-
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
     TextView tv_speed;
@@ -43,12 +40,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     Clocation myLocation = null;
     Button btn_save;
     Button btn_reset;
+    Button btn_map;
     LocationManager locationManager;
     boolean Start_status = false;
     List<String[]> Result = new ArrayList<>();
+    List<Position> positions = new ArrayList<>();
     CircularProgressBar circularProgressBar;
-    //    List<Location> GPXresult = new ArrayList<>();
-    private final String TAG = "AppLog";
     private long originalTime = new Date().getTime();
 
 
@@ -62,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         btn_save = findViewById(R.id.btn_save);
         btn_start = findViewById(R.id.btn_start);
         btn_reset = findViewById(R.id.btn_reset);
+        btn_map = findViewById(R.id.btn_map);
         locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestMultiPermission();
@@ -74,20 +72,19 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 Start();
             }
         });
-        btn_save.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            @Override
-            public void onClick(View view) {
-                try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        toSaveCSV();
-                    } else {
-                        // TODO
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+        btn_save.setOnClickListener(view -> {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    toSaveCSV();
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+        });
+        btn_map.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, MapsActivity.class);
+            intent.putExtra("positions", (Serializable) positions);
+            startActivity(intent);
         });
         circularProgressBar = findViewById(R.id.circularProgressBar);
     }
@@ -104,13 +101,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             } else {
                 requestPermissions(permissions, REQUEST_PERMISSION_CODE);
             }
-        } else {
-
         }
     }
 
     private void Start() {
-        if (Start_status == false) {
+        if (!Start_status) {
             Start_status = true;
             btn_start.setText("Stop");
             btn_start.setTextColor(Color.RED);
@@ -120,8 +115,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             btn_start.setTextColor(Color.rgb(128, 203, 196));
 
         }
-        Log.d("main109", String.valueOf(Start_status));
-
     }
 
     @Override
@@ -156,7 +149,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     private void updateSpeed(Clocation location) {
-        Log.d(TAG + "157", location.toString());
         long timeNowInSecond = new Date().getTime();
 
         runOnUiThread(() -> {
@@ -167,23 +159,21 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             strLongitude = location.getLongitude();
             float strCurrentSpeed = (float) (location.getSpeed() * 3.6);
             circularProgressBar.setProgress(strCurrentSpeed);
-            Log.d(TAG+"170",timeNowInSecond + " - "+originalTime);
             if (timeNowInSecond >= originalTime + 1000) {
                 originalTime = timeNowInSecond;
+                positions.add(new Position(location.getLongitude(), location.getLatitude()));
                 Result.add(new String[]{CurrentDateTime, strCurrentSpeed + "", strLatitude + "", strLongitude + ""});
             }
             tv_speed.setText(String.valueOf(strCurrentSpeed));
-            tv_time.setText((CharSequence) CurrentDateTime);
+            tv_time.setText(CurrentDateTime);
         });
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void toSaveCSV() throws IOException {
-//        File file = new File("/storage/sdcard0");
         String currentTime = new SimpleDateFormat("HH_mm_ss", Locale.getDefault()).format(new Date());
         String fileName = currentTime + ".csv";
         CSVWriter writer = new CSVWriter(new FileWriter(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName, false));
-        int d = Log.d("main183", getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).toString());
         Toast.makeText(MainActivity.this, "save!", Toast.LENGTH_LONG).show();
         writer.writeAll(Result);
         writer.close();
