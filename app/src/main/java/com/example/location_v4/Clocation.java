@@ -1,4 +1,4 @@
-package com.example.location_v3;
+package com.example.location_v4;
 import android.location.Location;
 
 public class Clocation extends Location{

@@ -1,4 +1,4 @@
-package com.example.location_v3;
+package com.example.location_v4;
 
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import com.opencsv.CSVWriter;
@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     List<Position> positions = new ArrayList<>();
     CircularProgressBar circularProgressBar;
     private long originalTime = new Date().getTime();
+    String CurrentDateTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
 
 
     @Override
@@ -126,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     updateSpeed(myLocation);
                 }
                 sleep(1000);
+                CurrentDateTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
             }
         });
         thread.start();
@@ -154,7 +156,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         runOnUiThread(() -> {
             double strLatitude;
             double strLongitude;
-            String CurrentDateTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
             strLatitude = location.getLatitude();
             strLongitude = location.getLongitude();
             float strCurrentSpeed = (float) (location.getSpeed() * 3.6);
