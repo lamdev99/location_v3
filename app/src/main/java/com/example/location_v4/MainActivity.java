@@ -48,12 +48,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     CircularProgressBar circularProgressBar;
     private long originalTime = new Date().getTime();
     String CurrentDateTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-
+    FirebaseService firebaseService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        firebaseService = new FirebaseService();
         requestMultiPermission();
         tv_speed = findViewById(R.id.tv_speed);
         tv_time = findViewById(R.id.tv_time);
@@ -178,6 +179,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         Toast.makeText(MainActivity.this, "save!", Toast.LENGTH_LONG).show();
         writer.writeAll(Result);
         writer.close();
+        saveCSVToFirebase(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName,fileName);
+    }
+    private void saveCSVToFirebase(String filePath,String fileName){
+        firebaseService.saveFileToFirebase(this,filePath,fileName);
     }
 
     private static final String[] permissions = new String[]{"android.permission.ACCESS_FINE_LOCATION", "android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.ACCESS_COARSE_LOCATION", "android.permission.MANAGE_EXTERNAL_STORAGE", "android.permission.READ_EXTERNAL_STORAGE"};
